@@ -37,7 +37,12 @@ namespace MediaTekDocuments.dal
         private const string POST = "POST";
         /// <summary>
         /// méthode HTTP pour update
-
+        /// </summary>
+        private const string PUT = "PUT";
+        /// <summary>
+        /// méthode HTTP pour delete
+        /// </summary>
+        private const string DELETE = "DELETE";
         /// <summary>
         /// Méthode privée pour créer un singleton
         /// initialise l'accès à l'API
@@ -164,6 +169,96 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
+        /// Crée un livre.
+        /// </summary>
+        /// <param name="livre">Livre à créer</param>
+        /// <returns>True si la création est acceptée</returns>
+        public bool CreerLivre(Livre livre)
+        {
+            return TraiterMaj(POST, "livre", "champs=" + JsonConvert.SerializeObject(BuildLivrePayload(livre, includeId: true)));
+        }
+
+        /// <summary>
+        /// Modifie un livre.
+        /// </summary>
+        /// <param name="livre">Livre modifié (id inchangé)</param>
+        /// <returns>True si la modification est acceptée</returns>
+        public bool ModifierLivre(Livre livre)
+        {
+            return TraiterMaj(PUT, "livre/" + livre.Id, "champs=" + JsonConvert.SerializeObject(BuildLivrePayload(livre, includeId: false)));
+        }
+
+        /// <summary>
+        /// Supprime un livre.
+        /// </summary>
+        /// <param name="id">Identifiant du livre</param>
+        /// <returns>True si la suppression est acceptée</returns>
+        public bool SupprimerLivre(string id)
+        {
+            return TraiterMaj(DELETE, "livre/" + convertToJson("id", id), null);
+        }
+
+        /// <summary>
+        /// Crée un dvd.
+        /// </summary>
+        /// <param name="dvd">Dvd à créer</param>
+        /// <returns>True si la création est acceptée</returns>
+        public bool CreerDvd(Dvd dvd)
+        {
+            return TraiterMaj(POST, "dvd", "champs=" + JsonConvert.SerializeObject(BuildDvdPayload(dvd, includeId: true)));
+        }
+
+        /// <summary>
+        /// Modifie un dvd.
+        /// </summary>
+        /// <param name="dvd">Dvd modifié (id inchangé)</param>
+        /// <returns>True si la modification est acceptée</returns>
+        public bool ModifierDvd(Dvd dvd)
+        {
+            return TraiterMaj(PUT, "dvd/" + dvd.Id, "champs=" + JsonConvert.SerializeObject(BuildDvdPayload(dvd, includeId: false)));
+        }
+
+        /// <summary>
+        /// Supprime un dvd.
+        /// </summary>
+        /// <param name="id">Identifiant du dvd</param>
+        /// <returns>True si la suppression est acceptée</returns>
+        public bool SupprimerDvd(string id)
+        {
+            return TraiterMaj(DELETE, "dvd/" + convertToJson("id", id), null);
+        }
+
+        /// <summary>
+        /// Crée une revue.
+        /// </summary>
+        /// <param name="revue">Revue à créer</param>
+        /// <returns>True si la création est acceptée</returns>
+        public bool CreerRevue(Revue revue)
+        {
+            return TraiterMaj(POST, "revue", "champs=" + JsonConvert.SerializeObject(BuildRevuePayload(revue, includeId: true)));
+        }
+
+        /// <summary>
+        /// Modifie une revue.
+        /// </summary>
+        /// <param name="revue">Revue modifiée (id inchangé)</param>
+        /// <returns>True si la modification est acceptée</returns>
+        public bool ModifierRevue(Revue revue)
+        {
+            return TraiterMaj(PUT, "revue/" + revue.Id, "champs=" + JsonConvert.SerializeObject(BuildRevuePayload(revue, includeId: false)));
+        }
+
+        /// <summary>
+        /// Supprime une revue.
+        /// </summary>
+        /// <param name="id">Identifiant de la revue</param>
+        /// <returns>True si la suppression est acceptée</returns>
+        public bool SupprimerRevue(string id)
+        {
+            return TraiterMaj(DELETE, "revue/" + convertToJson("id", id), null);
+        }
+
+        /// <summary>
         /// Traitement de la récupération du retour de l'api, avec conversion du json en liste pour les select (GET)
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -213,6 +308,96 @@ namespace MediaTekDocuments.dal
             Dictionary<Object, Object> dictionary = new Dictionary<Object, Object>();
             dictionary.Add(nom, valeur);
             return JsonConvert.SerializeObject(dictionary);
+        }
+
+        /// <summary>
+        /// Exécute une requête de mise à jour et retourne true si la réponse API est 200.
+        /// </summary>
+        /// <param name="methode">Verbe HTTP</param>
+        /// <param name="message">Chemin API</param>
+        /// <param name="parametres">Body éventuel</param>
+        /// <returns>True si la requête est acceptée</returns>
+        private bool TraiterMaj(string methode, string message, string parametres)
+        {
+            try
+            {
+                JObject retour = api.RecupDistant(methode, message, parametres);
+                string code = (string)retour["code"];
+                return "200".Equals(code);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Erreur lors de l'accès à l'API : " + e.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Construit le payload API d'un livre.
+        /// </summary>
+        private Dictionary<string, object> BuildLivrePayload(Livre livre, bool includeId)
+        {
+            Dictionary<string, object> payload = new Dictionary<string, object>
+            {
+                { "titre", livre.Titre },
+                { "image", livre.Image },
+                { "idRayon", livre.IdRayon },
+                { "idPublic", livre.IdPublic },
+                { "idGenre", livre.IdGenre },
+                { "isbn", livre.Isbn },
+                { "auteur", livre.Auteur },
+                { "collection", livre.Collection }
+            };
+            if (includeId)
+            {
+                payload.Add("id", livre.Id);
+            }
+            return payload;
+        }
+
+        /// <summary>
+        /// Construit le payload API d'un dvd.
+        /// </summary>
+        private Dictionary<string, object> BuildDvdPayload(Dvd dvd, bool includeId)
+        {
+            Dictionary<string, object> payload = new Dictionary<string, object>
+            {
+                { "titre", dvd.Titre },
+                { "image", dvd.Image },
+                { "idRayon", dvd.IdRayon },
+                { "idPublic", dvd.IdPublic },
+                { "idGenre", dvd.IdGenre },
+                { "duree", dvd.Duree },
+                { "realisateur", dvd.Realisateur },
+                { "synopsis", dvd.Synopsis }
+            };
+            if (includeId)
+            {
+                payload.Add("id", dvd.Id);
+            }
+            return payload;
+        }
+
+        /// <summary>
+        /// Construit le payload API d'une revue.
+        /// </summary>
+        private Dictionary<string, object> BuildRevuePayload(Revue revue, bool includeId)
+        {
+            Dictionary<string, object> payload = new Dictionary<string, object>
+            {
+                { "titre", revue.Titre },
+                { "image", revue.Image },
+                { "idRayon", revue.IdRayon },
+                { "idPublic", revue.IdPublic },
+                { "idGenre", revue.IdGenre },
+                { "periodicite", revue.Periodicite },
+                { "delaiMiseADispo", revue.DelaiMiseADispo }
+            };
+            if (includeId)
+            {
+                payload.Add("id", revue.Id);
+            }
+            return payload;
         }
 
         /// <summary>

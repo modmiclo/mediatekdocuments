@@ -27,7 +27,13 @@ namespace MediaTekDocuments.view
         internal FrmMediatek()
         {
             InitializeComponent();
+            if (ClientSize.Height < 720)
+            {
+                ClientSize = new Size(883, 720);
+            }
+            MinimumSize = new Size(899, 720);
             this.controller = new FrmMediatekController();
+            InitializeCrudButtons();
         }
 
         /// <summary>
@@ -45,11 +51,90 @@ namespace MediaTekDocuments.view
                 cbx.SelectedIndex = -1;
             }
         }
+
+        /// <summary>
+        /// Ajoute les boutons CRUD dans les onglets Livres, Dvd et Revues.
+        /// </summary>
+        private void InitializeCrudButtons()
+        {
+            btnLivresAjouter = CreateCrudButton("Ajouter");
+            btnLivresModifier = CreateCrudButton("Modifier");
+            btnLivresSupprimer = CreateCrudButton("Supprimer");
+            btnDvdAjouter = CreateCrudButton("Ajouter");
+            btnDvdModifier = CreateCrudButton("Modifier");
+            btnDvdSupprimer = CreateCrudButton("Supprimer");
+            btnRevuesAjouter = CreateCrudButton("Ajouter");
+            btnRevuesModifier = CreateCrudButton("Modifier");
+            btnRevuesSupprimer = CreateCrudButton("Supprimer");
+
+            btnLivresAjouter.Click += BtnLivresAjouter_Click;
+            btnLivresModifier.Click += BtnLivresModifier_Click;
+            btnLivresSupprimer.Click += BtnLivresSupprimer_Click;
+            btnDvdAjouter.Click += BtnDvdAjouter_Click;
+            btnDvdModifier.Click += BtnDvdModifier_Click;
+            btnDvdSupprimer.Click += BtnDvdSupprimer_Click;
+            btnRevuesAjouter.Click += BtnRevuesAjouter_Click;
+            btnRevuesModifier.Click += BtnRevuesModifier_Click;
+            btnRevuesSupprimer.Click += BtnRevuesSupprimer_Click;
+
+            tabLivres.Controls.Add(CreateCrudPanel(btnLivresAjouter, btnLivresModifier, btnLivresSupprimer));
+            tabDvd.Controls.Add(CreateCrudPanel(btnDvdAjouter, btnDvdModifier, btnDvdSupprimer));
+            tabRevues.Controls.Add(CreateCrudPanel(btnRevuesAjouter, btnRevuesModifier, btnRevuesSupprimer));
+        }
+
+        /// <summary>
+        /// Construit un bouton d'action CRUD.
+        /// </summary>
+        private Button CreateCrudButton(string text)
+        {
+            return new Button
+            {
+                Text = text,
+                Width = 100,
+                Height = 28,
+                Margin = new Padding(8, 3, 0, 3)
+            };
+        }
+
+        /// <summary>
+        /// Construit le panneau des actions CRUD.
+        /// </summary>
+        private Panel CreateCrudPanel(Button btnAjouter, Button btnModifier, Button btnSupprimer)
+        {
+            Panel panel = new Panel
+            {
+                Location = new Point(8, 632),
+                Size = new Size(859, 32)
+            };
+            btnAjouter.Location = new Point(520, 2);
+            btnModifier.Location = new Point(628, 2);
+            btnSupprimer.Location = new Point(736, 2);
+            panel.Controls.Add(btnAjouter);
+            panel.Controls.Add(btnModifier);
+            panel.Controls.Add(btnSupprimer);
+            return panel;
+        }
+
+        /// <summary>
+        /// Active ou désactive les actions dépendantes d'une sélection.
+        /// </summary>
+        private void UpdateCrudButtonsState()
+        {
+            btnLivresModifier.Enabled = bdgLivresListe.Position >= 0 && bdgLivresListe.Count > 0;
+            btnLivresSupprimer.Enabled = bdgLivresListe.Position >= 0 && bdgLivresListe.Count > 0;
+            btnDvdModifier.Enabled = bdgDvdListe.Position >= 0 && bdgDvdListe.Count > 0;
+            btnDvdSupprimer.Enabled = bdgDvdListe.Position >= 0 && bdgDvdListe.Count > 0;
+            btnRevuesModifier.Enabled = bdgRevuesListe.Position >= 0 && bdgRevuesListe.Count > 0;
+            btnRevuesSupprimer.Enabled = bdgRevuesListe.Position >= 0 && bdgRevuesListe.Count > 0;
+        }
         #endregion
 
         #region Onglet Livres
         private readonly BindingSource bdgLivresListe = new BindingSource();
         private List<Livre> lesLivres = new List<Livre>();
+        private Button btnLivresAjouter;
+        private Button btnLivresModifier;
+        private Button btnLivresSupprimer;
 
         /// <summary>
         /// Ouverture de l'onglet Livres : 
@@ -82,6 +167,7 @@ namespace MediaTekDocuments.view
             dgvLivresListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dgvLivresListe.Columns["id"].DisplayIndex = 0;
             dgvLivresListe.Columns["titre"].DisplayIndex = 1;
+            UpdateCrudButtonsState();
         }
 
         /// <summary>
@@ -270,6 +356,7 @@ namespace MediaTekDocuments.view
             {
                 VideLivresInfos();
             }
+            UpdateCrudButtonsState();
         }
 
         /// <summary>
@@ -360,11 +447,96 @@ namespace MediaTekDocuments.view
             }
             RemplirLivresListe(sortedList);
         }
+
+        /// <summary>
+        /// Ajoute un livre.
+        /// </summary>
+        private void BtnLivresAjouter_Click(object sender, EventArgs e)
+        {
+            string nextId = GenerateNextDocumentId(lesLivres.Select(l => l.Id));
+            using (FrmDocumentEdit form = new FrmDocumentEdit(
+                DocumentKind.Livre,
+                controller.GetAllGenres(),
+                controller.GetAllPublics(),
+                controller.GetAllRayons(),
+                null,
+                nextId))
+            {
+                if (form.ShowDialog(this) == DialogResult.OK && form.LivreResult != null)
+                {
+                    if (controller.CreerLivre(form.LivreResult))
+                    {
+                        lesLivres = controller.GetAllLivres();
+                        RemplirLivresListeComplete();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ajout impossible. Verifiez les informations saisies.", "Erreur");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Modifie le livre sélectionné.
+        /// </summary>
+        private void BtnLivresModifier_Click(object sender, EventArgs e)
+        {
+            if (bdgLivresListe.Position < 0 || bdgLivresListe.Count == 0)
+            {
+                return;
+            }
+            Livre selected = (Livre)bdgLivresListe.List[bdgLivresListe.Position];
+            using (FrmDocumentEdit form = new FrmDocumentEdit(DocumentKind.Livre, controller.GetAllGenres(), controller.GetAllPublics(), controller.GetAllRayons(), selected))
+            {
+                if (form.ShowDialog(this) == DialogResult.OK && form.LivreResult != null)
+                {
+                    if (controller.ModifierLivre(form.LivreResult))
+                    {
+                        lesLivres = controller.GetAllLivres();
+                        RemplirLivresListeComplete();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Modification impossible.", "Erreur");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Supprime le livre sélectionné.
+        /// </summary>
+        private void BtnLivresSupprimer_Click(object sender, EventArgs e)
+        {
+            if (bdgLivresListe.Position < 0 || bdgLivresListe.Count == 0)
+            {
+                return;
+            }
+            Livre selected = (Livre)bdgLivresListe.List[bdgLivresListe.Position];
+            DialogResult confirm = MessageBox.Show("Confirmer la suppression du livre " + selected.Id + " ?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes)
+            {
+                return;
+            }
+            if (controller.SupprimerLivre(selected.Id))
+            {
+                lesLivres = controller.GetAllLivres();
+                RemplirLivresListeComplete();
+            }
+            else
+            {
+                MessageBox.Show("Suppression impossible. Ce document a peut-etre des exemplaires ou des commandes.", "Information");
+            }
+        }
         #endregion
 
         #region Onglet Dvd
         private readonly BindingSource bdgDvdListe = new BindingSource();
         private List<Dvd> lesDvd = new List<Dvd>();
+        private Button btnDvdAjouter;
+        private Button btnDvdModifier;
+        private Button btnDvdSupprimer;
 
         /// <summary>
         /// Ouverture de l'onglet Dvds : 
@@ -397,6 +569,7 @@ namespace MediaTekDocuments.view
             dgvDvdListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dgvDvdListe.Columns["id"].DisplayIndex = 0;
             dgvDvdListe.Columns["titre"].DisplayIndex = 1;
+            UpdateCrudButtonsState();
         }
 
         /// <summary>
@@ -585,6 +758,7 @@ namespace MediaTekDocuments.view
             {
                 VideDvdInfos();
             }
+            UpdateCrudButtonsState();
         }
 
         /// <summary>
@@ -675,11 +849,96 @@ namespace MediaTekDocuments.view
             }
             RemplirDvdListe(sortedList);
         }
+
+        /// <summary>
+        /// Ajoute un dvd.
+        /// </summary>
+        private void BtnDvdAjouter_Click(object sender, EventArgs e)
+        {
+            string nextId = GenerateNextDocumentId(lesDvd.Select(d => d.Id));
+            using (FrmDocumentEdit form = new FrmDocumentEdit(
+                DocumentKind.Dvd,
+                controller.GetAllGenres(),
+                controller.GetAllPublics(),
+                controller.GetAllRayons(),
+                null,
+                nextId))
+            {
+                if (form.ShowDialog(this) == DialogResult.OK && form.DvdResult != null)
+                {
+                    if (controller.CreerDvd(form.DvdResult))
+                    {
+                        lesDvd = controller.GetAllDvd();
+                        RemplirDvdListeComplete();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ajout impossible. Verifiez les informations saisies.", "Erreur");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Modifie le dvd sélectionné.
+        /// </summary>
+        private void BtnDvdModifier_Click(object sender, EventArgs e)
+        {
+            if (bdgDvdListe.Position < 0 || bdgDvdListe.Count == 0)
+            {
+                return;
+            }
+            Dvd selected = (Dvd)bdgDvdListe.List[bdgDvdListe.Position];
+            using (FrmDocumentEdit form = new FrmDocumentEdit(DocumentKind.Dvd, controller.GetAllGenres(), controller.GetAllPublics(), controller.GetAllRayons(), selected))
+            {
+                if (form.ShowDialog(this) == DialogResult.OK && form.DvdResult != null)
+                {
+                    if (controller.ModifierDvd(form.DvdResult))
+                    {
+                        lesDvd = controller.GetAllDvd();
+                        RemplirDvdListeComplete();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Modification impossible.", "Erreur");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Supprime le dvd sélectionné.
+        /// </summary>
+        private void BtnDvdSupprimer_Click(object sender, EventArgs e)
+        {
+            if (bdgDvdListe.Position < 0 || bdgDvdListe.Count == 0)
+            {
+                return;
+            }
+            Dvd selected = (Dvd)bdgDvdListe.List[bdgDvdListe.Position];
+            DialogResult confirm = MessageBox.Show("Confirmer la suppression du dvd " + selected.Id + " ?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes)
+            {
+                return;
+            }
+            if (controller.SupprimerDvd(selected.Id))
+            {
+                lesDvd = controller.GetAllDvd();
+                RemplirDvdListeComplete();
+            }
+            else
+            {
+                MessageBox.Show("Suppression impossible. Ce document a peut-etre des exemplaires ou des commandes.", "Information");
+            }
+        }
         #endregion
 
         #region Onglet Revues
         private readonly BindingSource bdgRevuesListe = new BindingSource();
         private List<Revue> lesRevues = new List<Revue>();
+        private Button btnRevuesAjouter;
+        private Button btnRevuesModifier;
+        private Button btnRevuesSupprimer;
 
         /// <summary>
         /// Ouverture de l'onglet Revues : 
@@ -711,6 +970,7 @@ namespace MediaTekDocuments.view
             dgvRevuesListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dgvRevuesListe.Columns["id"].DisplayIndex = 0;
             dgvRevuesListe.Columns["titre"].DisplayIndex = 1;
+            UpdateCrudButtonsState();
         }
 
         /// <summary>
@@ -897,6 +1157,7 @@ namespace MediaTekDocuments.view
             {
                 VideRevuesInfos();
             }
+            UpdateCrudButtonsState();
         }
 
         /// <summary>
@@ -986,6 +1247,106 @@ namespace MediaTekDocuments.view
                     break;
             }
             RemplirRevuesListe(sortedList);
+        }
+
+        /// <summary>
+        /// Ajoute une revue.
+        /// </summary>
+        private void BtnRevuesAjouter_Click(object sender, EventArgs e)
+        {
+            string nextId = GenerateNextDocumentId(lesRevues.Select(r => r.Id));
+            using (FrmDocumentEdit form = new FrmDocumentEdit(
+                DocumentKind.Revue,
+                controller.GetAllGenres(),
+                controller.GetAllPublics(),
+                controller.GetAllRayons(),
+                null,
+                nextId))
+            {
+                if (form.ShowDialog(this) == DialogResult.OK && form.RevueResult != null)
+                {
+                    if (controller.CreerRevue(form.RevueResult))
+                    {
+                        lesRevues = controller.GetAllRevues();
+                        RemplirRevuesListeComplete();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ajout impossible. Verifiez les informations saisies.", "Erreur");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Modifie la revue sélectionnée.
+        /// </summary>
+        private void BtnRevuesModifier_Click(object sender, EventArgs e)
+        {
+            if (bdgRevuesListe.Position < 0 || bdgRevuesListe.Count == 0)
+            {
+                return;
+            }
+            Revue selected = (Revue)bdgRevuesListe.List[bdgRevuesListe.Position];
+            using (FrmDocumentEdit form = new FrmDocumentEdit(DocumentKind.Revue, controller.GetAllGenres(), controller.GetAllPublics(), controller.GetAllRayons(), selected))
+            {
+                if (form.ShowDialog(this) == DialogResult.OK && form.RevueResult != null)
+                {
+                    if (controller.ModifierRevue(form.RevueResult))
+                    {
+                        lesRevues = controller.GetAllRevues();
+                        RemplirRevuesListeComplete();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Modification impossible.", "Erreur");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Supprime la revue sélectionnée.
+        /// </summary>
+        private void BtnRevuesSupprimer_Click(object sender, EventArgs e)
+        {
+            if (bdgRevuesListe.Position < 0 || bdgRevuesListe.Count == 0)
+            {
+                return;
+            }
+            Revue selected = (Revue)bdgRevuesListe.List[bdgRevuesListe.Position];
+            DialogResult confirm = MessageBox.Show("Confirmer la suppression de la revue " + selected.Id + " ?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes)
+            {
+                return;
+            }
+            if (controller.SupprimerRevue(selected.Id))
+            {
+                lesRevues = controller.GetAllRevues();
+                RemplirRevuesListeComplete();
+            }
+            else
+            {
+                MessageBox.Show("Suppression impossible. Ce document a peut-etre des exemplaires ou des commandes.", "Information");
+            }
+        }
+
+        /// <summary>
+        /// Génère l'identifiant suivant à partir du plus grand id numérique d'une catégorie.
+        /// </summary>
+        /// <param name="ids">Liste des identifiants existants</param>
+        /// <returns>Nouvel identifiant sur 5 caractères</returns>
+        private string GenerateNextDocumentId(IEnumerable<string> ids)
+        {
+            int max = 0;
+            foreach (string id in ids)
+            {
+                if (int.TryParse(id, out int value) && value > max)
+                {
+                    max = value;
+                }
+            }
+            return (max + 1).ToString("D5");
         }
         #endregion
 

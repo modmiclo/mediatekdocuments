@@ -42,7 +42,7 @@ namespace MediaTekDocuments.manager
         /// Crée une instance unique de la classe
         /// </summary>
         /// <param name="uriApi">adresse de l'api</param>
-        /// <param name="authenticationString">chaîne d'authentificatio (login:pwd)</param>
+        /// <param name="authenticationString">chaîne d'authentification (login:pwd)</param>
         /// <returns></returns>
         public static ApiRest GetInstance(String uriApi, String authenticationString)
         {
@@ -88,7 +88,8 @@ namespace MediaTekDocuments.manager
                     return new JObject();
             }
             // récupération de l'information retournée par l'api
-            return httpResponse.Content.ReadAsAsync<JObject>().Result;
+            var json = httpResponse.Content.ReadAsStringAsync().Result; 
+            return JObject.Parse(json);
         }
 
     }

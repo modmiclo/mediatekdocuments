@@ -96,5 +96,77 @@ namespace MediaTekDocuments.controller
         {
             return access.CreerExemplaire(exemplaire);
         }
+
+        /// <summary>
+        /// Crée un livre.
+        /// </summary>
+        public bool CreerLivre(Livre livre)
+        {
+            return access.CreerLivre(livre);
+        }
+
+        /// <summary>
+        /// Met à jour un livre.
+        /// </summary>
+        public bool ModifierLivre(Livre livre)
+        {
+            return access.ModifierLivre(livre);
+        }
+
+        /// <summary>
+        /// Supprime un livre.
+        /// </summary>
+        public bool SupprimerLivre(string id)
+        {
+            return access.SupprimerLivre(id);
+        }
+
+        /// <summary>
+        /// Crée un dvd.
+        /// </summary>
+        public bool CreerDvd(Dvd dvd)
+        {
+            return access.CreerDvd(dvd);
+        }
+
+        /// <summary>
+        /// Met à jour un dvd.
+        /// </summary>
+        public bool ModifierDvd(Dvd dvd)
+        {
+            return access.ModifierDvd(dvd);
+        }
+
+        /// <summary>
+        /// Supprime un dvd.
+        /// </summary>
+        public bool SupprimerDvd(string id)
+        {
+            return access.SupprimerDvd(id);
+        }
+
+        /// <summary>
+        /// Crée une revue.
+        /// </summary>
+        public bool CreerRevue(Revue revue)
+        {
+            return access.CreerRevue(revue);
+        }
+
+        /// <summary>
+        /// Met à jour une revue.
+        /// </summary>
+        public bool ModifierRevue(Revue revue)
+        {
+            return access.ModifierRevue(revue);
+        }
+
+        /// <summary>
+        /// Supprime une revue.
+        /// </summary>
+        public bool SupprimerRevue(string id)
+        {
+            return access.SupprimerRevue(id);
+        }
     }
 }
