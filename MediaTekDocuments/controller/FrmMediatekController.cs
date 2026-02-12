@@ -87,6 +87,25 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
+        /// getter sur les abonnements d'une revue.
+        /// </summary>
+        /// <param name="idRevue">id revue</param>
+        /// <returns>Liste d'abonnements</returns>
+        public List<Abonnement> GetAbonnementsRevue(string idRevue)
+        {
+            return access.GetAbonnementsRevue(idRevue);
+        }
+
+        /// <summary>
+        /// getter sur les abonnements qui se terminent dans moins de 30 jours.
+        /// </summary>
+        /// <returns>Liste d'abonnements</returns>
+        public List<Abonnement> GetAbonnementsFinProche()
+        {
+            return access.GetAbonnementsFinProche();
+        }
+
+        /// <summary>
         /// getter sur les rayons
         /// </summary>
         /// <returns>Liste d'objets Rayon</returns>
@@ -219,6 +238,22 @@ namespace MediaTekDocuments.controller
         public bool SupprimerCommandeDocument(string idCommande)
         {
             return access.SupprimerCommandeDocument(idCommande);
+        }
+
+        /// <summary>
+        /// Cree un abonnement de revue.
+        /// </summary>
+        public bool CreerAbonnement(Abonnement abonnement)
+        {
+            return access.CreerAbonnement(abonnement);
+        }
+
+        /// <summary>
+        /// Supprime un abonnement de revue.
+        /// </summary>
+        public bool SupprimerAbonnement(string idCommande)
+        {
+            return access.SupprimerAbonnement(idCommande);
         }
 
         /// <summary>

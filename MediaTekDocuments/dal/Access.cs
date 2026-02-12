@@ -164,6 +164,27 @@ namespace MediaTekDocuments.dal
             return TraitementRecup<CommandeDocument>(GET, "commandedocument/" + jsonId, null);
         }
 
+        /// <summary>
+        /// Retourne les abonnements d'une revue.
+        /// </summary>
+        /// <param name="idRevue">Id revue</param>
+        /// <returns>Liste d'abonnements</returns>
+        public List<Abonnement> GetAbonnementsRevue(string idRevue)
+        {
+            String jsonId = convertToJson("idRevue", idRevue);
+            return TraitementRecup<Abonnement>(GET, "abonnement/" + jsonId, null);
+        }
+
+        /// <summary>
+        /// Retourne la liste des revues dont l'abonnement finit dans moins de 30 jours.
+        /// </summary>
+        /// <returns>Liste d'abonnements (titre + date fin)</returns>
+        public List<Abonnement> GetAbonnementsFinProche()
+        {
+            String jsonParam = convertToJson("finProche", true);
+            return TraitementRecup<Abonnement>(GET, "abonnement/" + jsonParam, null);
+        }
+
 
         /// <summary>
         /// Retourne les exemplaires d'une revue
@@ -300,6 +321,26 @@ namespace MediaTekDocuments.dal
         public bool SupprimerCommandeDocument(string idCommande)
         {
             return TraiterMaj(DELETE, "commandedocument/" + convertToJson("id", idCommande), null);
+        }
+
+        /// <summary>
+        /// Cree un abonnement de revue.
+        /// </summary>
+        /// <param name="abonnement">Abonnement a creer</param>
+        /// <returns>True si creation acceptee</returns>
+        public bool CreerAbonnement(Abonnement abonnement)
+        {
+            return TraiterMaj(POST, "abonnement", "champs=" + JsonConvert.SerializeObject(BuildAbonnementPayload(abonnement), new CustomDateTimeConverter()));
+        }
+
+        /// <summary>
+        /// Supprime un abonnement de revue.
+        /// </summary>
+        /// <param name="idCommande">Id commande/abonnement</param>
+        /// <returns>True si suppression acceptee</returns>
+        public bool SupprimerAbonnement(string idCommande)
+        {
+            return TraiterMaj(DELETE, "abonnement/" + convertToJson("id", idCommande), null);
         }
 
         /// <summary>
@@ -482,6 +523,21 @@ namespace MediaTekDocuments.dal
                 payload.Add("idSuivi", commande.IdSuivi);
             }
             return payload;
+        }
+
+        /// <summary>
+        /// Construit le payload API d'un abonnement.
+        /// </summary>
+        private Dictionary<string, object> BuildAbonnementPayload(Abonnement abonnement)
+        {
+            return new Dictionary<string, object>
+            {
+                { "id", abonnement.Id },
+                { "dateCommande", abonnement.DateCommande },
+                { "montant", abonnement.Montant },
+                { "dateFinAbonnement", abonnement.DateFinAbonnement },
+                { "idRevue", abonnement.IdRevue }
+            };
         }
 
         /// <summary>

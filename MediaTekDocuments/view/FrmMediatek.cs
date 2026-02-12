@@ -20,6 +20,7 @@ namespace MediaTekDocuments.view
         private readonly BindingSource bdgGenres = new BindingSource();
         private readonly BindingSource bdgPublics = new BindingSource();
         private readonly BindingSource bdgRayons = new BindingSource();
+        private bool alertesAffichees = false;
 
         /// <summary>
         /// Constructeur : création du contrôleur lié à ce formulaire
@@ -34,6 +35,7 @@ namespace MediaTekDocuments.view
             MinimumSize = new Size(899, 720);
             this.controller = new FrmMediatekController();
             InitializeCrudButtons();
+            Shown += FrmMediatek_Shown;
         }
 
         /// <summary>
@@ -68,6 +70,7 @@ namespace MediaTekDocuments.view
             btnRevuesAjouter = CreateCrudButton("Ajouter");
             btnRevuesModifier = CreateCrudButton("Modifier");
             btnRevuesSupprimer = CreateCrudButton("Supprimer");
+            btnRevuesAbonnements = CreateCrudButton("Abonnements...");
 
             btnLivresAjouter.Click += BtnLivresAjouter_Click;
             btnLivresModifier.Click += BtnLivresModifier_Click;
@@ -80,10 +83,11 @@ namespace MediaTekDocuments.view
             btnRevuesAjouter.Click += BtnRevuesAjouter_Click;
             btnRevuesModifier.Click += BtnRevuesModifier_Click;
             btnRevuesSupprimer.Click += BtnRevuesSupprimer_Click;
+            btnRevuesAbonnements.Click += BtnRevuesAbonnements_Click;
 
             tabLivres.Controls.Add(CreateCrudPanel(btnLivresAjouter, btnLivresModifier, btnLivresSupprimer, btnLivresCommandes));
             tabDvd.Controls.Add(CreateCrudPanel(btnDvdAjouter, btnDvdModifier, btnDvdSupprimer, btnDvdCommandes));
-            tabRevues.Controls.Add(CreateCrudPanel(btnRevuesAjouter, btnRevuesModifier, btnRevuesSupprimer));
+            tabRevues.Controls.Add(CreateCrudPanel(btnRevuesAjouter, btnRevuesModifier, btnRevuesSupprimer, btnRevuesAbonnements));
         }
 
         /// <summary>
@@ -137,6 +141,27 @@ namespace MediaTekDocuments.view
             btnDvdCommandes.Enabled = bdgDvdListe.Count > 0;
             btnRevuesModifier.Enabled = bdgRevuesListe.Position >= 0 && bdgRevuesListe.Count > 0;
             btnRevuesSupprimer.Enabled = bdgRevuesListe.Position >= 0 && bdgRevuesListe.Count > 0;
+            btnRevuesAbonnements.Enabled = bdgRevuesListe.Count > 0;
+        }
+
+        /// <summary>
+        /// Affiche les alertes d'abonnement une seule fois à l'ouverture de l'application.
+        /// </summary>
+        private void FrmMediatek_Shown(object sender, EventArgs e)
+        {
+            if (alertesAffichees)
+            {
+                return;
+            }
+            alertesAffichees = true;
+            List<Abonnement> alertes = controller.GetAbonnementsFinProche();
+            if (alertes != null && alertes.Count > 0)
+            {
+                using (FrmAlerteAbonnements form = new FrmAlerteAbonnements(alertes))
+                {
+                    form.ShowDialog(this);
+                }
+            }
         }
         #endregion
 
@@ -974,6 +999,7 @@ namespace MediaTekDocuments.view
         private Button btnRevuesAjouter;
         private Button btnRevuesModifier;
         private Button btnRevuesSupprimer;
+        private Button btnRevuesAbonnements;
 
         /// <summary>
         /// Ouverture de l'onglet Revues : 
@@ -1363,6 +1389,17 @@ namespace MediaTekDocuments.view
             else
             {
                 MessageBox.Show("Suppression impossible. Ce document a peut-etre des exemplaires ou des commandes.", "Information");
+            }
+        }
+
+        /// <summary>
+        /// Ouvre la fenetre de gestion des abonnements de revues.
+        /// </summary>
+        private void BtnRevuesAbonnements_Click(object sender, EventArgs e)
+        {
+            using (FrmCommandesRevue form = new FrmCommandesRevue(controller))
+            {
+                form.ShowDialog(this);
             }
         }
 
