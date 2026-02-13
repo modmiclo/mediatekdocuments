@@ -20,6 +20,10 @@ namespace MediaTekDocuments.dal
         /// </summary>
         private static readonly string uriApi = "http://localhost/rest_mediatekdocuments/";
         /// <summary>
+        /// nom de la chaine de connexion contenant le credential API
+        /// </summary>
+        private static readonly string connectionName = "MediaTekDocuments.Properties.Settings.apiAuthentication";
+        /// <summary>
         /// instance unique de la classe
         /// </summary>
         private static Access instance = null;
@@ -52,7 +56,11 @@ namespace MediaTekDocuments.dal
             String authenticationString;
             try
             {
-                authenticationString = "admin:adminpwd";
+                authenticationString = GetConnectionStringByName(connectionName);
+                if (String.IsNullOrWhiteSpace(authenticationString))
+                {
+                    throw new ConfigurationErrorsException("La chaine de connexion 'MediaTekDocuments.Properties.Settings.apiAuthentication' est absente ou vide.");
+                }
                 api = ApiRest.GetInstance(uriApi, authenticationString);
             }
             catch (Exception e)
@@ -486,6 +494,21 @@ namespace MediaTekDocuments.dal
             Dictionary<Object, Object> dictionary = new Dictionary<Object, Object>();
             dictionary.Add(nom, valeur);
             return JsonConvert.SerializeObject(dictionary);
+        }
+
+        /// <summary>
+        /// Recupere une chaine de connexion depuis App.config a partir de son nom.
+        /// </summary>
+        /// <param name="name">Nom de la chaine dans la section connectionStrings</param>
+        /// <returns>Chaine de connexion ou null si absente</returns>
+        private static string GetConnectionStringByName(string name)
+        {
+            ConnectionStringSettings settings = ConfigurationManager.ConnectionStrings[name];
+            if (settings == null)
+            {
+                return null;
+            }
+            return settings.ConnectionString;
         }
 
         /// <summary>
