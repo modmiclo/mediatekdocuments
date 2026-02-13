@@ -7,6 +7,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System.Configuration;
 using System.Linq;
+using System.IO;
 
 namespace MediaTekDocuments.dal
 {
@@ -27,6 +28,14 @@ namespace MediaTekDocuments.dal
         /// prefixe du parametre body attendu par l'API
         /// </summary>
         private const string ChampsPrefix = "champs=";
+        /// <summary>
+        /// nom du dossier de logs applicatifs
+        /// </summary>
+        private const string LogsDirectoryName = "logs";
+        /// <summary>
+        /// nom du fichier de logs applicatifs
+        /// </summary>
+        private const string LogsFileName = "access.log";
         /// <summary>
         /// instance unique de la classe
         /// </summary>
@@ -52,6 +61,18 @@ namespace MediaTekDocuments.dal
         /// </summary>
         private const string DELETE = "DELETE";
         /// <summary>
+        /// synchronisation des ecritures log
+        /// </summary>
+        private static readonly object LogSync = new object();
+        /// <summary>
+        /// chemin complet du fichier de logs
+        /// </summary>
+        private static string logsFilePath = null;
+        /// <summary>
+        /// indique si la configuration des logs a deja ete faite
+        /// </summary>
+        private static bool logsConfigured = false;
+        /// <summary>
         /// Méthode privée pour créer un singleton
         /// initialise l'accès à l'API
         /// </summary>
@@ -61,6 +82,7 @@ namespace MediaTekDocuments.dal
             string apiBaseUrl;
             try
             {
+                ConfigureLogs();
                 authenticationString = GetConnectionStringByName(ConnectionName);
                 if (string.IsNullOrWhiteSpace(authenticationString))
                 {
@@ -72,10 +94,11 @@ namespace MediaTekDocuments.dal
                     throw new ConfigurationErrorsException("La cle AppSettings 'apiBaseUrl' est absente ou vide.");
                 }
                 api = ApiRest.GetInstance(apiBaseUrl, authenticationString);
+                LogInfo("Connexion API initialisee sur " + apiBaseUrl);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                LogError("Erreur d'initialisation Access: " + e.Message);
                 Environment.Exit(0);
             }
         }
@@ -271,7 +294,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                LogError("Erreur lors de la creation d'un exemplaire: " + ex.Message);
             }
             return false;
         }
@@ -483,11 +506,11 @@ namespace MediaTekDocuments.dal
                 }
                 else
                 {
-                    Console.WriteLine("code erreur = " + code + " message = " + (string)retour["message"]);
+                    LogWarning("Code erreur API = " + code + " message = " + (string)retour["message"]);
                 }
             }catch(Exception e)
             {
-                Console.WriteLine("Erreur lors de l'accès à l'API : "+e.Message);
+                LogError("Erreur lors de l'acces a l'API : " + e.Message);
                 Environment.Exit(0);
             }
             return liste;
@@ -548,9 +571,69 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception e)
             {
-                Console.WriteLine("Erreur lors de l'accès à l'API : " + e.Message);
+                LogError("Erreur lors de l'acces a l'API : " + e.Message);
             }
             return false;
+        }
+
+        /// <summary>
+        /// Configure le chemin de logs et initialise le fichier de sortie.
+        /// </summary>
+        private static void ConfigureLogs()
+        {
+            if (logsConfigured)
+            {
+                return;
+            }
+
+            string logsDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogsDirectoryName);
+            Directory.CreateDirectory(logsDirectoryPath);
+            logsFilePath = Path.Combine(logsDirectoryPath, LogsFileName);
+            logsConfigured = true;
+            WriteLogLine("INFO", "Configuration des logs initialisee.");
+        }
+
+        /// <summary>
+        /// Ecrit un log de niveau information.
+        /// </summary>
+        private static void LogInfo(string message)
+        {
+            WriteLogLine("INFO", message);
+        }
+
+        /// <summary>
+        /// Ecrit un log de niveau avertissement.
+        /// </summary>
+        private static void LogWarning(string message)
+        {
+            WriteLogLine("WARN", message);
+        }
+
+        /// <summary>
+        /// Ecrit un log de niveau erreur.
+        /// </summary>
+        private static void LogError(string message)
+        {
+            WriteLogLine("ERROR", message);
+        }
+
+        /// <summary>
+        /// Ecrit un message horodate en console et dans le fichier de logs.
+        /// </summary>
+        private static void WriteLogLine(string level, string message)
+        {
+            string formattedMessage = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + " [" + level + "] " + message;
+            Console.WriteLine(formattedMessage);
+
+            if (!logsConfigured || string.IsNullOrWhiteSpace(logsFilePath))
+            {
+                return;
+            }
+
+            lock (LogSync)
+            {
+                File.AppendAllText(logsFilePath, formattedMessage + Environment.NewLine);
+            }
         }
 
         /// <summary>
