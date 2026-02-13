@@ -26,7 +26,11 @@ namespace MediaTekDocuments.view
         private readonly BindingSource bdgReceptionEtats = new BindingSource();
         private readonly BindingSource bdgLivresEtats = new BindingSource();
         private readonly BindingSource bdgDvdEtats = new BindingSource();
+        private readonly Utilisateur utilisateurConnecte;
         private bool alertesAffichees = false;
+        private bool peutGererDocuments = false;
+        private bool peutGererCommandes = false;
+        private bool peutGererParutions = false;
         private List<Etat> lesEtats = new List<Etat>();
 
         private GroupBox grpLivresExemplaires;
@@ -54,7 +58,7 @@ namespace MediaTekDocuments.view
         /// <summary>
         /// Constructeur : création du contrôleur lié à ce formulaire
         /// </summary>
-        internal FrmMediatek()
+        internal FrmMediatek(Utilisateur utilisateur)
         {
             InitializeComponent();
             if (ClientSize.Height < 900)
@@ -62,10 +66,51 @@ namespace MediaTekDocuments.view
                 ClientSize = new Size(883, 900);
             }
             MinimumSize = new Size(899, 900);
+            utilisateurConnecte = utilisateur;
             this.controller = new FrmMediatekController();
             InitializeCrudButtons();
             InitializeExemplairesUi();
+            InitialiserDroitsAcces();
             Shown += FrmMediatek_Shown;
+        }
+
+        /// <summary>
+        /// Calcule les droits d'acces de l'utilisateur connecte et configure l'interface.
+        /// </summary>
+        private void InitialiserDroitsAcces()
+        {
+            string service = (utilisateurConnecte?.Service ?? string.Empty).Trim().ToLowerInvariant();
+            switch (service)
+            {
+                case "administratif":
+                    peutGererDocuments = true;
+                    peutGererCommandes = true;
+                    peutGererParutions = true;
+                    break;
+                case "pret":
+                    peutGererDocuments = true;
+                    peutGererCommandes = false;
+                    peutGererParutions = true;
+                    break;
+                default:
+                    peutGererDocuments = false;
+                    peutGererCommandes = false;
+                    peutGererParutions = false;
+                    break;
+            }
+            if (!peutGererParutions && tabOngletsApplication.TabPages.Contains(tabReceptionRevue))
+            {
+                tabOngletsApplication.TabPages.Remove(tabReceptionRevue);
+            }
+            string nom = (utilisateurConnecte?.Prenom + " " + utilisateurConnecte?.Nom).Trim();
+            if (!string.IsNullOrWhiteSpace(nom) && !string.IsNullOrWhiteSpace(utilisateurConnecte?.Service))
+            {
+                Text = $"Gestion des documents de la mediatheque - {nom} ({utilisateurConnecte.Service})";
+            }
+            UpdateCrudButtonsState();
+            UpdateLivresExemplairesActionsState();
+            UpdateDvdExemplairesActionsState();
+            UpdateReceptionExemplairesActionsState();
         }
 
         /// <summary>
@@ -163,15 +208,18 @@ namespace MediaTekDocuments.view
         /// </summary>
         private void UpdateCrudButtonsState()
         {
-            btnLivresModifier.Enabled = bdgLivresListe.Position >= 0 && bdgLivresListe.Count > 0;
-            btnLivresSupprimer.Enabled = bdgLivresListe.Position >= 0 && bdgLivresListe.Count > 0;
-            btnLivresCommandes.Enabled = bdgLivresListe.Count > 0;
-            btnDvdModifier.Enabled = bdgDvdListe.Position >= 0 && bdgDvdListe.Count > 0;
-            btnDvdSupprimer.Enabled = bdgDvdListe.Position >= 0 && bdgDvdListe.Count > 0;
-            btnDvdCommandes.Enabled = bdgDvdListe.Count > 0;
-            btnRevuesModifier.Enabled = bdgRevuesListe.Position >= 0 && bdgRevuesListe.Count > 0;
-            btnRevuesSupprimer.Enabled = bdgRevuesListe.Position >= 0 && bdgRevuesListe.Count > 0;
-            btnRevuesAbonnements.Enabled = bdgRevuesListe.Count > 0;
+            btnLivresAjouter.Enabled = peutGererDocuments;
+            btnLivresModifier.Enabled = peutGererDocuments && bdgLivresListe.Position >= 0 && bdgLivresListe.Count > 0;
+            btnLivresSupprimer.Enabled = peutGererDocuments && bdgLivresListe.Position >= 0 && bdgLivresListe.Count > 0;
+            btnLivresCommandes.Enabled = peutGererCommandes && bdgLivresListe.Count > 0;
+            btnDvdAjouter.Enabled = peutGererDocuments;
+            btnDvdModifier.Enabled = peutGererDocuments && bdgDvdListe.Position >= 0 && bdgDvdListe.Count > 0;
+            btnDvdSupprimer.Enabled = peutGererDocuments && bdgDvdListe.Position >= 0 && bdgDvdListe.Count > 0;
+            btnDvdCommandes.Enabled = peutGererCommandes && bdgDvdListe.Count > 0;
+            btnRevuesAjouter.Enabled = peutGererDocuments;
+            btnRevuesModifier.Enabled = peutGererDocuments && bdgRevuesListe.Position >= 0 && bdgRevuesListe.Count > 0;
+            btnRevuesSupprimer.Enabled = peutGererDocuments && bdgRevuesListe.Position >= 0 && bdgRevuesListe.Count > 0;
+            btnRevuesAbonnements.Enabled = peutGererCommandes && bdgRevuesListe.Count > 0;
         }
 
         /// <summary>
@@ -180,6 +228,10 @@ namespace MediaTekDocuments.view
         private void FrmMediatek_Shown(object sender, EventArgs e)
         {
             ChargerEtats();
+            if (!peutGererCommandes)
+            {
+                return;
+            }
             if (alertesAffichees)
             {
                 return;
@@ -680,7 +732,7 @@ namespace MediaTekDocuments.view
         private void UpdateLivresExemplairesActionsState()
         {
             Exemplaire selected = GetSelectedLivreExemplaire();
-            bool hasSelection = selected != null;
+            bool hasSelection = peutGererDocuments && selected != null;
             btnLivresExemplaireSupprimer.Enabled = hasSelection;
             btnLivresExemplaireEtat.Enabled = hasSelection && cbxLivresExemplaireEtat.SelectedIndex >= 0;
             if (!hasSelection)
@@ -907,6 +959,10 @@ namespace MediaTekDocuments.view
         /// </summary>
         private void BtnLivresCommandes_Click(object sender, EventArgs e)
         {
+            if (!peutGererCommandes)
+            {
+                return;
+            }
             using (FrmCommandesDocument form = new FrmCommandesDocument(true, controller))
             {
                 form.ShowDialog(this);
@@ -1244,7 +1300,7 @@ namespace MediaTekDocuments.view
         private void UpdateDvdExemplairesActionsState()
         {
             Exemplaire selected = GetSelectedDvdExemplaire();
-            bool hasSelection = selected != null;
+            bool hasSelection = peutGererDocuments && selected != null;
             btnDvdExemplaireSupprimer.Enabled = hasSelection;
             btnDvdExemplaireEtat.Enabled = hasSelection && cbxDvdExemplaireEtat.SelectedIndex >= 0;
             if (!hasSelection)
@@ -1471,6 +1527,10 @@ namespace MediaTekDocuments.view
         /// </summary>
         private void BtnDvdCommandes_Click(object sender, EventArgs e)
         {
+            if (!peutGererCommandes)
+            {
+                return;
+            }
             using (FrmCommandesDocument form = new FrmCommandesDocument(false, controller))
             {
                 form.ShowDialog(this);
@@ -1882,6 +1942,10 @@ namespace MediaTekDocuments.view
         /// </summary>
         private void BtnRevuesAbonnements_Click(object sender, EventArgs e)
         {
+            if (!peutGererCommandes)
+            {
+                return;
+            }
             using (FrmCommandesRevue form = new FrmCommandesRevue(controller))
             {
                 form.ShowDialog(this);
@@ -1919,6 +1983,10 @@ namespace MediaTekDocuments.view
         /// <param name="e"></param>
         private void tabReceptionRevue_Enter(object sender, EventArgs e)
         {
+            if (!peutGererParutions)
+            {
+                return;
+            }
             ChargerEtats();
             lesRevues = controller.GetAllRevues();
             txbReceptionRevueNumero.Text = "";
@@ -2040,7 +2108,7 @@ namespace MediaTekDocuments.view
         /// <param name="acces">true ou false</param>
         private void AccesReceptionExemplaireGroupBox(bool acces)
         {
-            grpReceptionExemplaire.Enabled = acces;
+            grpReceptionExemplaire.Enabled = peutGererParutions && acces;
             txbReceptionExemplaireImage.Text = "";
             txbReceptionExemplaireNumero.Text = "";
             pcbReceptionExemplaireImage.Image = null;
@@ -2185,7 +2253,7 @@ namespace MediaTekDocuments.view
         private void UpdateReceptionExemplairesActionsState()
         {
             Exemplaire selected = GetSelectedReceptionExemplaire();
-            bool hasSelection = selected != null && grpReceptionExemplaire.Enabled;
+            bool hasSelection = peutGererParutions && selected != null && grpReceptionExemplaire.Enabled;
             btnReceptionExemplaireSupprimer.Enabled = hasSelection;
             btnReceptionExemplaireEtat.Enabled = hasSelection && cbxReceptionExemplaireEtat.SelectedIndex >= 0;
         }

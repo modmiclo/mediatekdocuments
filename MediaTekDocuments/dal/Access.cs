@@ -86,6 +86,27 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
+        /// Authentifie un utilisateur via l'API.
+        /// </summary>
+        /// <param name="login">Login saisi</param>
+        /// <param name="motDePasse">Mot de passe saisi</param>
+        /// <returns>Utilisateur authentifie ou null</returns>
+        public Utilisateur Authentifier(string login, string motDePasse)
+        {
+            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(motDePasse))
+            {
+                return null;
+            }
+            Dictionary<string, object> payload = new Dictionary<string, object>
+            {
+                { "login", login },
+                { "motDePasse", motDePasse }
+            };
+            List<Utilisateur> utilisateurs = TraitementRecup<Utilisateur>(GET, "utilisateur/" + JsonConvert.SerializeObject(payload), null);
+            return utilisateurs.FirstOrDefault();
+        }
+
+        /// <summary>
         /// Retourne tous les rayons à partir de la BDD
         /// </summary>
         /// <returns>Liste d'objets Rayon</returns>
