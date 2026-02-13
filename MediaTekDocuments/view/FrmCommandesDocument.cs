@@ -10,6 +10,7 @@ namespace MediaTekDocuments.view
 {
     internal class FrmCommandesDocument : Form
     {
+        private const string InformationTitle = "Information";
         private readonly FrmMediatekController controller;
         private readonly bool modeLivre;
         private readonly BindingSource bdgCommandes = new BindingSource();
@@ -23,13 +24,11 @@ namespace MediaTekDocuments.view
         private Document documentSelectionne;
 
         private TextBox txbNumero;
-        private Button btnRechercher;
         private Label lblInfos;
         private DataGridView dgvCommandes;
         private DateTimePicker dtpDateCommande;
         private NumericUpDown nudMontant;
         private NumericUpDown nudNbExemplaires;
-        private Button btnAjouterCommande;
         private ComboBox cbxSuivi;
         private Button btnModifierSuivi;
         private Button btnSupprimerCommande;
@@ -65,7 +64,7 @@ namespace MediaTekDocuments.view
 
             Label lblNumero = new Label { Text = modeLivre ? "Numero livre :" : "Numero DVD :", Location = new Point(16, 18), AutoSize = true };
             txbNumero = new TextBox { Location = new Point(118, 15), Size = new Size(140, 20) };
-            btnRechercher = new Button { Text = "Rechercher", Location = new Point(270, 13), Size = new Size(100, 24) };
+            Button btnRechercher = new Button { Text = "Rechercher", Location = new Point(270, 13), Size = new Size(100, 24) };
             btnRechercher.Click += BtnRechercher_Click;
 
             lblInfos = new Label
@@ -101,7 +100,7 @@ namespace MediaTekDocuments.view
             grpAjout.Controls.Add(new Label { Text = "Nb exemplaires :", Location = new Point(16, 108), AutoSize = true });
             nudNbExemplaires = new NumericUpDown { Location = new Point(140, 104), Size = new Size(170, 20), Minimum = 1, Maximum = 1000, Value = 1 };
             grpAjout.Controls.Add(nudNbExemplaires);
-            btnAjouterCommande = new Button { Text = "Enregistrer", Location = new Point(140, 150), Size = new Size(120, 28) };
+            Button btnAjouterCommande = new Button { Text = "Enregistrer", Location = new Point(140, 150), Size = new Size(120, 28) };
             btnAjouterCommande.Click += BtnAjouterCommande_Click;
             grpAjout.Controls.Add(btnAjouterCommande);
 
@@ -130,7 +129,7 @@ namespace MediaTekDocuments.view
             string id = txbNumero.Text.Trim();
             if (id == "")
             {
-                MessageBox.Show("Le numero est obligatoire.", "Information");
+                MessageBox.Show("Le numero est obligatoire.", InformationTitle);
                 return;
             }
             documentSelectionne = modeLivre
@@ -140,7 +139,7 @@ namespace MediaTekDocuments.view
             if (documentSelectionne == null)
             {
                 ResetSelection();
-                MessageBox.Show("Numero introuvable.", "Information");
+                MessageBox.Show("Numero introuvable.", InformationTitle);
                 return;
             }
             lblInfos.Text = $"ID: {documentSelectionne.Id} | Titre: {documentSelectionne.Titre} | Genre: {documentSelectionne.Genre} | Public: {documentSelectionne.Public} | Rayon: {documentSelectionne.Rayon}";
@@ -151,7 +150,7 @@ namespace MediaTekDocuments.view
         {
             if (documentSelectionne == null)
             {
-                MessageBox.Show("Selectionnez d'abord un document.", "Information");
+                MessageBox.Show("Selectionnez d'abord un document.", InformationTitle);
                 return;
             }
 
@@ -189,7 +188,7 @@ namespace MediaTekDocuments.view
             }
             else
             {
-                MessageBox.Show("Modification impossible. Verifiez les regles de progression.", "Information");
+                MessageBox.Show("Modification impossible. Verifiez les regles de progression.", InformationTitle);
             }
         }
 
@@ -216,7 +215,7 @@ namespace MediaTekDocuments.view
             }
             else
             {
-                MessageBox.Show("Suppression impossible: la commande est deja livree/reglee ou invalide.", "Information");
+                MessageBox.Show("Suppression impossible: la commande est deja livree/reglee ou invalide.", InformationTitle);
             }
         }
 

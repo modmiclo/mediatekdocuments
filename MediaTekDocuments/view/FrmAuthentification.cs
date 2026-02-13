@@ -14,8 +14,6 @@ namespace MediaTekDocuments.view
         private readonly FrmMediatekController controller;
         private TextBox txbLogin;
         private TextBox txbMotDePasse;
-        private Button btnConnexion;
-        private Button btnQuitter;
 
         public Utilisateur AuthentifieUtilisateur { get; private set; }
 
@@ -39,8 +37,8 @@ namespace MediaTekDocuments.view
             Label lblMotDePasse = new Label { Text = "Mot de passe :", Location = new Point(24, 62), AutoSize = true };
             txbMotDePasse = new TextBox { Location = new Point(120, 59), Width = 210, UseSystemPasswordChar = true };
 
-            btnConnexion = new Button { Text = "Connexion", Location = new Point(120, 105), Width = 100 };
-            btnQuitter = new Button { Text = "Quitter", Location = new Point(230, 105), Width = 100 };
+            Button btnConnexion = new Button { Text = "Connexion", Location = new Point(120, 105), Width = 100 };
+            Button btnQuitter = new Button { Text = "Quitter", Location = new Point(230, 105), Width = 100 };
 
             btnConnexion.Click += BtnConnexion_Click;
             btnQuitter.Click += BtnQuitter_Click;

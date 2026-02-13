@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
+
 namespace MediaTekDocuments.model
 {
     /// <summary>
@@ -16,6 +18,7 @@ namespace MediaTekDocuments.model
         public string IdRayon { get; }
         public string Rayon { get; }
 
+        [SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters", Justification = "Le modele documentaire impose l'initialisation explicite de tous les attributs communs.")]
         public Document(string id, string titre, string image, string idGenre, string genre, string idPublic, string lePublic, string idRayon, string rayon)
         {
             Id = id;

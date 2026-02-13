@@ -10,6 +10,7 @@ namespace MediaTekDocuments.view
 {
     internal class FrmCommandesRevue : Form
     {
+        private const string InformationTitle = "Information";
         private readonly FrmMediatekController controller;
         private readonly BindingSource bdgAbonnements = new BindingSource();
         private readonly Dictionary<string, bool> sortAsc = new Dictionary<string, bool>();
@@ -113,7 +114,7 @@ namespace MediaTekDocuments.view
             string id = txbNumero.Text.Trim();
             if (id == "")
             {
-                MessageBox.Show("Le numero est obligatoire.", "Information");
+                MessageBox.Show("Le numero est obligatoire.", InformationTitle);
                 return;
             }
 
@@ -121,7 +122,7 @@ namespace MediaTekDocuments.view
             if (revueSelectionnee == null)
             {
                 ResetSelection();
-                MessageBox.Show("Numero introuvable.", "Information");
+                MessageBox.Show("Numero introuvable.", InformationTitle);
                 return;
             }
 
@@ -133,7 +134,7 @@ namespace MediaTekDocuments.view
         {
             if (revueSelectionnee == null)
             {
-                MessageBox.Show("Selectionnez d'abord une revue.", "Information");
+                MessageBox.Show("Selectionnez d'abord une revue.", InformationTitle);
                 return;
             }
 
@@ -141,7 +142,7 @@ namespace MediaTekDocuments.view
             DateTime dateFin = dtpDateFinAbonnement.Value.Date;
             if (dateFin < dateCommande)
             {
-                MessageBox.Show("La date de fin d'abonnement doit etre >= date de commande.", "Information");
+                MessageBox.Show("La date de fin d'abonnement doit etre >= date de commande.", InformationTitle);
                 return;
             }
 
@@ -171,7 +172,7 @@ namespace MediaTekDocuments.view
                 Abonnement.ParutionDansAbonnement(selected.DateCommande, selected.DateFinAbonnement, ex.DateAchat));
             if (parutionDansPeriode)
             {
-                MessageBox.Show("Suppression impossible: des parutions existent deja dans la periode de cet abonnement.", "Information");
+                MessageBox.Show("Suppression impossible: des parutions existent deja dans la periode de cet abonnement.", InformationTitle);
                 return;
             }
 
@@ -191,7 +192,7 @@ namespace MediaTekDocuments.view
             }
             else
             {
-                MessageBox.Show("Suppression impossible: des parutions existent dans la periode de cet abonnement.", "Information");
+                MessageBox.Show("Suppression impossible: des parutions existent dans la periode de cet abonnement.", InformationTitle);
             }
         }
 

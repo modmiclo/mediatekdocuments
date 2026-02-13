@@ -15,6 +15,7 @@ namespace MediaTekDocuments.view
 
     internal class FrmDocumentEdit : Form
     {
+        private const string InformationTitle = "Information";
         private readonly DocumentKind kind;
         private readonly bool isEdition;
 
@@ -254,7 +255,7 @@ namespace MediaTekDocuments.view
             }
         }
 
-        private void SelectCategorie(ComboBox comboBox, string id)
+        private static void SelectCategorie(ComboBox comboBox, string id)
         {
             for (int i = 0; i < comboBox.Items.Count; i++)
             {
@@ -278,7 +279,7 @@ namespace MediaTekDocuments.view
 
             if ((!isEdition && id == string.Empty) || titre == string.Empty || genre == null || lePublic == null || rayon == null)
             {
-                MessageBox.Show("Veuillez renseigner les champs obligatoires.", "Information");
+                MessageBox.Show("Veuillez renseigner les champs obligatoires.", InformationTitle);
                 return;
             }
 
@@ -292,7 +293,7 @@ namespace MediaTekDocuments.view
                 int duree;
                 if (!int.TryParse(txtSpec1.Text.Trim(), out duree) || duree <= 0)
                 {
-                    MessageBox.Show("La duree doit etre un entier positif.", "Information");
+                    MessageBox.Show("La duree doit etre un entier positif.", InformationTitle);
                     return;
                 }
                 DvdResult = new Dvd(id, titre, image, duree, txtSpec2.Text.Trim(), txtSpec3.Text.Trim(),
@@ -303,13 +304,13 @@ namespace MediaTekDocuments.view
                 int delai;
                 if (!int.TryParse(txtSpec2.Text.Trim(), out delai) || delai < 0)
                 {
-                    MessageBox.Show("Le delai doit etre un entier positif ou nul.", "Information");
+                    MessageBox.Show("Le delai doit etre un entier positif ou nul.", InformationTitle);
                     return;
                 }
                 string periodicite = txtSpec1.Text.Trim();
                 if (periodicite == string.Empty)
                 {
-                    MessageBox.Show("La periodicite est obligatoire.", "Information");
+                    MessageBox.Show("La periodicite est obligatoire.", InformationTitle);
                     return;
                 }
                 RevueResult = new Revue(id, titre, image, genre.Id, genre.Libelle, lePublic.Id, lePublic.Libelle,

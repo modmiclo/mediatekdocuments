@@ -18,22 +18,17 @@ namespace MediaTekDocuments.manager
         /// </summary>
         private readonly HttpClient httpClient;
         /// <summary>
-        /// Canal http pour l'envoi du message et la récupération de la réponse
-        /// </summary>
-        private HttpResponseMessage httpResponse;
-
-        /// <summary>
         /// Constructeur privé pour préparer la connexion (éventuellement sécurisée)
         /// </summary>
         /// <param name="uriApi">adresse de l'api</param>
         /// <param name="authenticationString">chaîne d'authentification</param>
-        private ApiRest(String uriApi, String authenticationString="")
+        private ApiRest(string uriApi, string authenticationString = "")
         {
             httpClient = new HttpClient() { BaseAddress = new Uri(uriApi) };
             // prise en compte dans l'url de l'authentificaiton (basic authorization), si elle n'est pas vide
-            if (!String.IsNullOrEmpty(authenticationString))
+            if (!string.IsNullOrEmpty(authenticationString))
             {
-                String base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes(authenticationString));
+                string base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes(authenticationString));
                 httpClient.DefaultRequestHeaders.Add("Authorization", "Basic " + base64EncodedAuthenticationString);
             }
         }
@@ -44,9 +39,9 @@ namespace MediaTekDocuments.manager
         /// <param name="uriApi">adresse de l'api</param>
         /// <param name="authenticationString">chaîne d'authentificatio (login:pwd)</param>
         /// <returns></returns>
-        public static ApiRest GetInstance(String uriApi, String authenticationString)
+        public static ApiRest GetInstance(string uriApi, string authenticationString)
         {
-            if(instance == null)
+            if (instance == null)
             {
                 instance = new ApiRest(uriApi, authenticationString);
             }
@@ -60,14 +55,15 @@ namespace MediaTekDocuments.manager
         /// <param name="message">message à envoyer dans l'URL</param>
         /// <param name="parametres">contenu de variables à mettre dans body</param>
         /// <returns>liste d'objets (select) ou liste vide (ok) ou null si erreur</returns>
-        public JObject RecupDistant(string methode, string message, String parametres)
+        public JObject RecupDistant(string methode, string message, string parametres)
         {
             // transformation des paramètres pour les mettre dans le body
             StringContent content = null;
-            if(!(parametres is null))
+            if (!(parametres is null))
             {
                 content = new StringContent(parametres, System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
             }
+            HttpResponseMessage httpResponse;
             // envoi du message et attente de la réponse
             switch (methode)
             {

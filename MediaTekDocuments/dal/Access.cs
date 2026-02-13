@@ -16,13 +16,17 @@ namespace MediaTekDocuments.dal
     public class Access
     {
         /// <summary>
-        /// adresse de l'API
+        /// nom du parametre de configuration pour l'adresse de l'API
         /// </summary>
-        private static readonly string uriApi = "http://localhost/rest_mediatekdocuments/";
+        private const string ApiBaseUrlSettingName = "apiBaseUrl";
         /// <summary>
         /// nom de la chaine de connexion contenant le credential API
         /// </summary>
-        private static readonly string connectionName = "MediaTekDocuments.Properties.Settings.apiAuthentication";
+        private static readonly string ConnectionName = "MediaTekDocuments.Properties.Settings.apiAuthentication";
+        /// <summary>
+        /// prefixe du parametre body attendu par l'API
+        /// </summary>
+        private const string ChampsPrefix = "champs=";
         /// <summary>
         /// instance unique de la classe
         /// </summary>
@@ -53,15 +57,21 @@ namespace MediaTekDocuments.dal
         /// </summary>
         private Access()
         {
-            String authenticationString;
+            string authenticationString;
+            string apiBaseUrl;
             try
             {
-                authenticationString = GetConnectionStringByName(connectionName);
-                if (String.IsNullOrWhiteSpace(authenticationString))
+                authenticationString = GetConnectionStringByName(ConnectionName);
+                if (string.IsNullOrWhiteSpace(authenticationString))
                 {
                     throw new ConfigurationErrorsException("La chaine de connexion 'MediaTekDocuments.Properties.Settings.apiAuthentication' est absente ou vide.");
                 }
-                api = ApiRest.GetInstance(uriApi, authenticationString);
+                apiBaseUrl = GetAppSettingByName(ApiBaseUrlSettingName);
+                if (string.IsNullOrWhiteSpace(apiBaseUrl))
+                {
+                    throw new ConfigurationErrorsException("La cle AppSettings 'apiBaseUrl' est absente ou vide.");
+                }
+                api = ApiRest.GetInstance(apiBaseUrl, authenticationString);
             }
             catch (Exception e)
             {
@@ -76,7 +86,7 @@ namespace MediaTekDocuments.dal
         /// <returns>instance unique de la classe</returns>
         public static Access GetInstance()
         {
-            if(instance == null)
+            if (instance == null)
             {
                 instance = new Access();
             }
@@ -198,7 +208,7 @@ namespace MediaTekDocuments.dal
         /// <returns>Liste de commandes</returns>
         public List<CommandeDocument> GetCommandesDocument(string idLivreDvd)
         {
-            String jsonId = convertToJson("idLivreDvd", idLivreDvd);
+            string jsonId = ConvertToJson("idLivreDvd", idLivreDvd);
             return TraitementRecup<CommandeDocument>(GET, "commandedocument/" + jsonId, null);
         }
 
@@ -209,7 +219,7 @@ namespace MediaTekDocuments.dal
         /// <returns>Liste d'abonnements</returns>
         public List<Abonnement> GetAbonnementsRevue(string idRevue)
         {
-            String jsonId = convertToJson("idRevue", idRevue);
+            string jsonId = ConvertToJson("idRevue", idRevue);
             return TraitementRecup<Abonnement>(GET, "abonnement/" + jsonId, null);
         }
 
@@ -219,7 +229,7 @@ namespace MediaTekDocuments.dal
         /// <returns>Liste d'abonnements (titre + date fin)</returns>
         public List<Abonnement> GetAbonnementsFinProche()
         {
-            String jsonParam = convertToJson("finProche", true);
+            string jsonParam = ConvertToJson("finProche", true);
             return TraitementRecup<Abonnement>(GET, "abonnement/" + jsonParam, null);
         }
 
@@ -231,7 +241,7 @@ namespace MediaTekDocuments.dal
         /// <returns>Liste d'objets Exemplaire</returns>
         public List<Exemplaire> GetExemplairesRevue(string idDocument)
         {
-            String jsonIdDocument = convertToJson("id", idDocument);
+            string jsonIdDocument = ConvertToJson("id", idDocument);
             List<Exemplaire> lesExemplaires = TraitementRecup<Exemplaire>(GET, "exemplaire/" + jsonIdDocument, null);
             return lesExemplaires;
         }
@@ -253,11 +263,11 @@ namespace MediaTekDocuments.dal
         /// <returns>true si l'insertion a pu se faire (retour != null)</returns>
         public bool CreerExemplaire(Exemplaire exemplaire)
         {
-            String jsonExemplaire = JsonConvert.SerializeObject(exemplaire, new CustomDateTimeConverter());
+            string jsonExemplaire = JsonConvert.SerializeObject(exemplaire, new CustomDateTimeConverter());
             try
             {
-                List<Exemplaire> liste = TraitementRecup<Exemplaire>(POST, "exemplaire", "champs=" + jsonExemplaire);
-                return (liste != null);
+                List<Exemplaire> liste = TraitementRecup<Exemplaire>(POST, "exemplaire", ChampsPrefix + jsonExemplaire);
+                return liste != null;
             }
             catch (Exception ex)
             {
@@ -280,7 +290,7 @@ namespace MediaTekDocuments.dal
                 { "numero", numero },
                 { "idEtat", idEtat }
             };
-            return TraiterMaj(PUT, "exemplaire/" + idDocument, "champs=" + JsonConvert.SerializeObject(payload));
+            return TraiterMaj(PUT, "exemplaire/" + idDocument, ChampsPrefix + JsonConvert.SerializeObject(payload));
         }
 
         /// <summary>
@@ -306,7 +316,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si la création est acceptée</returns>
         public bool CreerLivre(Livre livre)
         {
-            return TraiterMaj(POST, "livre", "champs=" + JsonConvert.SerializeObject(BuildLivrePayload(livre, includeId: true)));
+            return TraiterMaj(POST, "livre", ChampsPrefix + JsonConvert.SerializeObject(BuildLivrePayload(livre, includeId: true)));
         }
 
         /// <summary>
@@ -316,7 +326,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si la modification est acceptée</returns>
         public bool ModifierLivre(Livre livre)
         {
-            return TraiterMaj(PUT, "livre/" + livre.Id, "champs=" + JsonConvert.SerializeObject(BuildLivrePayload(livre, includeId: false)));
+            return TraiterMaj(PUT, "livre/" + livre.Id, ChampsPrefix + JsonConvert.SerializeObject(BuildLivrePayload(livre, includeId: false)));
         }
 
         /// <summary>
@@ -326,7 +336,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si la suppression est acceptée</returns>
         public bool SupprimerLivre(string id)
         {
-            return TraiterMaj(DELETE, "livre/" + convertToJson("id", id), null);
+            return TraiterMaj(DELETE, "livre/" + ConvertToJson("id", id), null);
         }
 
         /// <summary>
@@ -336,7 +346,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si la création est acceptée</returns>
         public bool CreerDvd(Dvd dvd)
         {
-            return TraiterMaj(POST, "dvd", "champs=" + JsonConvert.SerializeObject(BuildDvdPayload(dvd, includeId: true)));
+            return TraiterMaj(POST, "dvd", ChampsPrefix + JsonConvert.SerializeObject(BuildDvdPayload(dvd, includeId: true)));
         }
 
         /// <summary>
@@ -346,7 +356,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si la modification est acceptée</returns>
         public bool ModifierDvd(Dvd dvd)
         {
-            return TraiterMaj(PUT, "dvd/" + dvd.Id, "champs=" + JsonConvert.SerializeObject(BuildDvdPayload(dvd, includeId: false)));
+            return TraiterMaj(PUT, "dvd/" + dvd.Id, ChampsPrefix + JsonConvert.SerializeObject(BuildDvdPayload(dvd, includeId: false)));
         }
 
         /// <summary>
@@ -356,7 +366,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si la suppression est acceptée</returns>
         public bool SupprimerDvd(string id)
         {
-            return TraiterMaj(DELETE, "dvd/" + convertToJson("id", id), null);
+            return TraiterMaj(DELETE, "dvd/" + ConvertToJson("id", id), null);
         }
 
         /// <summary>
@@ -366,7 +376,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si la création est acceptée</returns>
         public bool CreerRevue(Revue revue)
         {
-            return TraiterMaj(POST, "revue", "champs=" + JsonConvert.SerializeObject(BuildRevuePayload(revue, includeId: true)));
+            return TraiterMaj(POST, "revue", ChampsPrefix + JsonConvert.SerializeObject(BuildRevuePayload(revue, includeId: true)));
         }
 
         /// <summary>
@@ -376,7 +386,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si creation acceptee</returns>
         public bool CreerCommandeDocument(CommandeDocument commande)
         {
-            return TraiterMaj(POST, "commandedocument", "champs=" + JsonConvert.SerializeObject(BuildCommandePayload(commande, includeSuivi: true), new CustomDateTimeConverter()));
+            return TraiterMaj(POST, "commandedocument", ChampsPrefix + JsonConvert.SerializeObject(BuildCommandePayload(commande, includeSuivi: true), new CustomDateTimeConverter()));
         }
 
         /// <summary>
@@ -391,7 +401,7 @@ namespace MediaTekDocuments.dal
             {
                 { "idSuivi", idSuivi }
             };
-            return TraiterMaj(PUT, "commandedocument/" + idCommande, "champs=" + JsonConvert.SerializeObject(payload));
+            return TraiterMaj(PUT, "commandedocument/" + idCommande, ChampsPrefix + JsonConvert.SerializeObject(payload));
         }
 
         /// <summary>
@@ -401,7 +411,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si suppression acceptee</returns>
         public bool SupprimerCommandeDocument(string idCommande)
         {
-            return TraiterMaj(DELETE, "commandedocument/" + convertToJson("id", idCommande), null);
+            return TraiterMaj(DELETE, "commandedocument/" + ConvertToJson("id", idCommande), null);
         }
 
         /// <summary>
@@ -411,7 +421,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si creation acceptee</returns>
         public bool CreerAbonnement(Abonnement abonnement)
         {
-            return TraiterMaj(POST, "abonnement", "champs=" + JsonConvert.SerializeObject(BuildAbonnementPayload(abonnement), new CustomDateTimeConverter()));
+            return TraiterMaj(POST, "abonnement", ChampsPrefix + JsonConvert.SerializeObject(BuildAbonnementPayload(abonnement), new CustomDateTimeConverter()));
         }
 
         /// <summary>
@@ -421,7 +431,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si suppression acceptee</returns>
         public bool SupprimerAbonnement(string idCommande)
         {
-            return TraiterMaj(DELETE, "abonnement/" + convertToJson("id", idCommande), null);
+            return TraiterMaj(DELETE, "abonnement/" + ConvertToJson("id", idCommande), null);
         }
 
         /// <summary>
@@ -431,7 +441,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si la modification est acceptée</returns>
         public bool ModifierRevue(Revue revue)
         {
-            return TraiterMaj(PUT, "revue/" + revue.Id, "champs=" + JsonConvert.SerializeObject(BuildRevuePayload(revue, includeId: false)));
+            return TraiterMaj(PUT, "revue/" + revue.Id, ChampsPrefix + JsonConvert.SerializeObject(BuildRevuePayload(revue, includeId: false)));
         }
 
         /// <summary>
@@ -441,7 +451,7 @@ namespace MediaTekDocuments.dal
         /// <returns>True si la suppression est acceptée</returns>
         public bool SupprimerRevue(string id)
         {
-            return TraiterMaj(DELETE, "revue/" + convertToJson("id", id), null);
+            return TraiterMaj(DELETE, "revue/" + ConvertToJson("id", id), null);
         }
 
         /// <summary>
@@ -452,7 +462,7 @@ namespace MediaTekDocuments.dal
         /// <param name="message">information envoyée dans l'url</param>
         /// <param name="parametres">paramètres à envoyer dans le body, au format "chp1=val1&chp2=val2&..."</param>
         /// <returns>liste d'objets récupérés (ou liste vide)</returns>
-        private List<T> TraitementRecup<T> (String methode, String message, String parametres)
+        private List<T> TraitementRecup<T>(string methode, string message, string parametres)
         {
             // trans
             List<T> liste = new List<T>();
@@ -460,20 +470,20 @@ namespace MediaTekDocuments.dal
             {
                 JObject retour = api.RecupDistant(methode, message, parametres);
                 // extraction du code retourné
-                String code = (String)retour["code"];
+                string code = (string)retour["code"];
                 if (code.Equals("200"))
                 {
                     // dans le cas du GET (select), récupération de la liste d'objets
                     if (methode.Equals(GET))
                     {
-                        String resultString = JsonConvert.SerializeObject(retour["result"]);
+                        string resultString = JsonConvert.SerializeObject(retour["result"]);
                         // construction de la liste d'objets à partir du retour de l'api
                         liste = JsonConvert.DeserializeObject<List<T>>(resultString, new CustomBooleanJsonConverter());
                     }
                 }
                 else
                 {
-                    Console.WriteLine("code erreur = " + code + " message = " + (String)retour["message"]);
+                    Console.WriteLine("code erreur = " + code + " message = " + (string)retour["message"]);
                 }
             }catch(Exception e)
             {
@@ -489,9 +499,9 @@ namespace MediaTekDocuments.dal
         /// <param name="nom"></param>
         /// <param name="valeur"></param>
         /// <returns>couple au format json</returns>
-        private String convertToJson(Object nom, Object valeur)
+        private static string ConvertToJson(object nom, object valeur)
         {
-            Dictionary<Object, Object> dictionary = new Dictionary<Object, Object>();
+            Dictionary<object, object> dictionary = new Dictionary<object, object>();
             dictionary.Add(nom, valeur);
             return JsonConvert.SerializeObject(dictionary);
         }
@@ -509,6 +519,16 @@ namespace MediaTekDocuments.dal
                 return null;
             }
             return settings.ConnectionString;
+        }
+
+        /// <summary>
+        /// Recupere une valeur depuis App.config a partir de son nom.
+        /// </summary>
+        /// <param name="name">Nom de la cle dans la section appSettings</param>
+        /// <returns>Valeur ou null si absente</returns>
+        private static string GetAppSettingByName(string name)
+        {
+            return ConfigurationManager.AppSettings[name];
         }
 
         /// <summary>
@@ -536,7 +556,7 @@ namespace MediaTekDocuments.dal
         /// <summary>
         /// Construit le payload API d'un livre.
         /// </summary>
-        private Dictionary<string, object> BuildLivrePayload(Livre livre, bool includeId)
+        private static Dictionary<string, object> BuildLivrePayload(Livre livre, bool includeId)
         {
             Dictionary<string, object> payload = new Dictionary<string, object>
             {
@@ -559,7 +579,7 @@ namespace MediaTekDocuments.dal
         /// <summary>
         /// Construit le payload API d'un dvd.
         /// </summary>
-        private Dictionary<string, object> BuildDvdPayload(Dvd dvd, bool includeId)
+        private static Dictionary<string, object> BuildDvdPayload(Dvd dvd, bool includeId)
         {
             Dictionary<string, object> payload = new Dictionary<string, object>
             {
@@ -582,7 +602,7 @@ namespace MediaTekDocuments.dal
         /// <summary>
         /// Construit le payload API d'une revue.
         /// </summary>
-        private Dictionary<string, object> BuildRevuePayload(Revue revue, bool includeId)
+        private static Dictionary<string, object> BuildRevuePayload(Revue revue, bool includeId)
         {
             Dictionary<string, object> payload = new Dictionary<string, object>
             {
@@ -604,7 +624,7 @@ namespace MediaTekDocuments.dal
         /// <summary>
         /// Construit le payload API d'une commande document.
         /// </summary>
-        private Dictionary<string, object> BuildCommandePayload(CommandeDocument commande, bool includeSuivi)
+        private static Dictionary<string, object> BuildCommandePayload(CommandeDocument commande, bool includeSuivi)
         {
             Dictionary<string, object> payload = new Dictionary<string, object>
             {
@@ -624,7 +644,7 @@ namespace MediaTekDocuments.dal
         /// <summary>
         /// Construit le payload API d'un abonnement.
         /// </summary>
-        private Dictionary<string, object> BuildAbonnementPayload(Abonnement abonnement)
+        private static Dictionary<string, object> BuildAbonnementPayload(Abonnement abonnement)
         {
             return new Dictionary<string, object>
             {
