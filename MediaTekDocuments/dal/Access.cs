@@ -106,6 +106,15 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
+        /// Retourne tous les états à partir de la BDD.
+        /// </summary>
+        /// <returns>Liste d'objets Etat</returns>
+        public List<Etat> GetAllEtats()
+        {
+            return TraitementRecup<Etat>(GET, "etat", null);
+        }
+
+        /// <summary>
         /// Retourne toutes les livres à partir de la BDD
         /// </summary>
         /// <returns>Liste d'objets Livre</returns>
@@ -199,6 +208,16 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
+        /// Retourne les exemplaires d'un document (livre, dvd ou revue).
+        /// </summary>
+        /// <param name="idDocument">id document concerné</param>
+        /// <returns>Liste d'exemplaires</returns>
+        public List<Exemplaire> GetExemplairesDocument(string idDocument)
+        {
+            return GetExemplairesRevue(idDocument);
+        }
+
+        /// <summary>
         /// ecriture d'un exemplaire en base de données
         /// </summary>
         /// <param name="exemplaire">exemplaire à insérer</param>
@@ -216,6 +235,39 @@ namespace MediaTekDocuments.dal
                 Console.WriteLine(ex.Message);
             }
             return false;
+        }
+
+        /// <summary>
+        /// Modifie l'état d'un exemplaire.
+        /// </summary>
+        /// <param name="idDocument">Id document</param>
+        /// <param name="numero">Numéro exemplaire</param>
+        /// <param name="idEtat">Nouvel id état</param>
+        /// <returns>True si modification acceptée</returns>
+        public bool ModifierExemplaireEtat(string idDocument, int numero, string idEtat)
+        {
+            Dictionary<string, object> payload = new Dictionary<string, object>
+            {
+                { "numero", numero },
+                { "idEtat", idEtat }
+            };
+            return TraiterMaj(PUT, "exemplaire/" + idDocument, "champs=" + JsonConvert.SerializeObject(payload));
+        }
+
+        /// <summary>
+        /// Supprime un exemplaire.
+        /// </summary>
+        /// <param name="idDocument">Id document</param>
+        /// <param name="numero">Numéro exemplaire</param>
+        /// <returns>True si suppression acceptée</returns>
+        public bool SupprimerExemplaire(string idDocument, int numero)
+        {
+            Dictionary<string, object> payload = new Dictionary<string, object>
+            {
+                { "id", idDocument },
+                { "numero", numero }
+            };
+            return TraiterMaj(DELETE, "exemplaire/" + JsonConvert.SerializeObject(payload), null);
         }
 
         /// <summary>

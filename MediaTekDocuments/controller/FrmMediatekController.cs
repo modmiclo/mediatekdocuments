@@ -123,6 +123,15 @@ namespace MediaTekDocuments.controller
             return access.GetAllPublics();
         }
 
+        /// <summary>
+        /// getter sur la liste des états.
+        /// </summary>
+        /// <returns>Liste d'objets Etat</returns>
+        public List<Etat> GetAllEtats()
+        {
+            return access.GetAllEtats();
+        }
+
 
         /// <summary>
         /// récupère les exemplaires d'une revue
@@ -135,6 +144,16 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
+        /// récupère les exemplaires d'un document.
+        /// </summary>
+        /// <param name="idDocument">id du document concerné</param>
+        /// <returns>Liste d'exemplaires</returns>
+        public List<Exemplaire> GetExemplairesDocument(string idDocument)
+        {
+            return access.GetExemplairesDocument(idDocument);
+        }
+
+        /// <summary>
         /// Crée un exemplaire d'une revue dans la bdd
         /// </summary>
         /// <param name="exemplaire">L'objet Exemplaire concerné</param>
@@ -142,6 +161,22 @@ namespace MediaTekDocuments.controller
         public bool CreerExemplaire(Exemplaire exemplaire)
         {
             return access.CreerExemplaire(exemplaire);
+        }
+
+        /// <summary>
+        /// Modifie l'état d'un exemplaire.
+        /// </summary>
+        public bool ModifierExemplaireEtat(string idDocument, int numero, string idEtat)
+        {
+            return access.ModifierExemplaireEtat(idDocument, numero, idEtat);
+        }
+
+        /// <summary>
+        /// Supprime un exemplaire.
+        /// </summary>
+        public bool SupprimerExemplaire(string idDocument, int numero)
+        {
+            return access.SupprimerExemplaire(idDocument, numero);
         }
 
         /// <summary>
