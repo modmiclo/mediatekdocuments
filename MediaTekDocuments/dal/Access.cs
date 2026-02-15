@@ -483,7 +483,7 @@ namespace MediaTekDocuments.dal
         /// <typeparam name="T"></typeparam>
         /// <param name="methode">verbe HTTP (GET, POST, PUT, DELETE)</param>
         /// <param name="message">information envoyée dans l'url</param>
-        /// <param name="parametres">paramètres à envoyer dans le body, au format "chp1=val1&chp2=val2&..."</param>
+        /// <param name="parametres">paramètres à envoyer dans le body, au format "chp1=val1&amp;chp2=val2&amp;..."</param>
         /// <returns>liste d'objets récupérés (ou liste vide)</returns>
         private List<T> TraitementRecup<T>(string methode, string message, string parametres)
         {
