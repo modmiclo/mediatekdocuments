@@ -46,6 +46,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbonnementTests.cs" />
+    <Compile Include="CategorieEtEtatTests.cs" />
+    <Compile Include="DocumentAndDerivedTests.cs" />
+    <Compile Include="ExemplaireCommandeEtUtilisateurTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
