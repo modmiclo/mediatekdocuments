@@ -214,7 +214,7 @@ Cloner :
 
 - Ce dépôt (application WinForms)
 - L’API REST :  
-  https://github.com/CNED-SLAM/rest_mediatekdocuments
+  https://github.com/modmiclo/rest_mediatekdocuments
 
 ---
 
